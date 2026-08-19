@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إعدادات <%= guild.name %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="/dashboard" class="back-link">→ رجوع لقائمة السيرفرات</a>
+
+    <div class="bot-status">
+      <span class="bot-status-dot <%= botOnline ? '' : 'offline' %>"></span>
+      البوت <%= botOnline ? 'شغال الحين' : 'مو متصل حالياً' %>
+    </div>
+
+    <div class="page-header">
+      <h1>
+        <span class="guild-badge">
+          <% if (guild.icon) { %>
+            <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" alt="">
+          <% } else { %>
+            <div class="guild-icon-placeholder-lg" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent-blue));font-weight:800;"><%= guild.name[0] %></div>
+          <% } %>
+        </span>
+        إعدادات <%= guild.name %>
+      </h1>
+    </div>
+
+
+
+    <nav class="page-nav">
+      <a href="/dashboard/<%= guild.id %>" class="active">⚙️ الإعدادات</a>
+      <a href="/dashboard/<%= guild.id %>/stats">📊 الإحصائيات</a>
+      <a href="/dashboard/<%= guild.id %>/warnings">⚠️ الإنذارات</a>
+    </nav>
+
+    <!-- ===== رسالة الترحيب ===== -->
+    <div class="card card--welcome">
+      <div class="card-head">
+        <div class="card-icon">👋</div>
+        <div>
+          <h2>رسالة الترحيب</h2>
+          <div class="card-sub">تُرسل تلقائياً لكل عضو جديد ينضم</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/welcome">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل الترحيب</span>
+          <span class="switch">
+            <input type="checkbox" name="enabled" <%= settings.welcome.enabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label>قناة الترحيب</label>
+        <select name="channelId">
+          <option value="">-- اختر قناة --</option>
+          <% channels.forEach(c => { %>
+            <option value="<%= c.id %>" <%= settings.welcome.channelId === c.id ? 'selected' : '' %>># <%= c.name %></option>
+          <% }) %>
+        </select>
+
+        <label>نص الرسالة (استخدم {user} و {server})</label>
+        <input type="text" name="message" value="<%= settings.welcome.message %>">
+
+        <label class="toggle-row">
+          <span class="toggle-label">إرسال صورة ترحيب</span>
+          <span class="switch">
+            <input type="checkbox" name="withImage" <%= settings.welcome.withImage ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== الرول التلقائي ===== -->
+    <div class="card card--autorole">
+      <div class="card-head">
+        <div class="card-icon">🎭</div>
+        <div>
+          <h2>الرول التلقائي</h2>
+          <div class="card-sub">يُعطى تلقائياً لكل عضو جديد</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/autorole">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل الرول التلقائي</span>
+          <span class="switch">
+            <input type="checkbox" name="enabled" <%= settings.autoRole.enabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label>الرول</label>
+        <select name="roleId">
+          <option value="">-- اختر رول --</option>
+          <% roles.forEach(r => { %>
+            <option value="<%= r.id %>" <%= settings.autoRole.roleId === r.id ? 'selected' : '' %>><%= r.name %></option>
+          <% }) %>
+        </select>
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== السجل ===== -->
+    <div class="card card--logs">
+      <div class="card-head">
+        <div class="card-icon">📋</div>
+        <div>
+          <h2>السجل (Logs)</h2>
+          <div class="card-sub">يوثق كل حدث مهم بقناة مخصصة</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/logs">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل السجل</span>
+          <span class="switch">
+            <input type="checkbox" name="enabled" <%= settings.logs.enabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label>قناة السجل</label>
+        <select name="channelId">
+          <option value="">-- اختر قناة --</option>
+          <% channels.forEach(c => { %>
+            <option value="<%= c.id %>" <%= settings.logs.channelId === c.id ? 'selected' : '' %>># <%= c.name %></option>
+          <% }) %>
+        </select>
+
+        <label>الأحداث المسجّلة</label>
+        <div class="checkbox-grid">
+          <label class="toggle-row"><span class="toggle-label">حذف الرسائل</span><span class="switch switch--sm"><input type="checkbox" name="messageDelete" <%= settings.logs.events.messageDelete ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          <label class="toggle-row"><span class="toggle-label">تعديل الرسائل</span><span class="switch switch--sm"><input type="checkbox" name="messageEdit" <%= settings.logs.events.messageEdit ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          <label class="toggle-row"><span class="toggle-label">دخول الأعضاء</span><span class="switch switch--sm"><input type="checkbox" name="memberJoin" <%= settings.logs.events.memberJoin ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          <label class="toggle-row"><span class="toggle-label">خروج الأعضاء</span><span class="switch switch--sm"><input type="checkbox" name="memberLeave" <%= settings.logs.events.memberLeave ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          <label class="toggle-row"><span class="toggle-label">تغيير الرتب</span><span class="switch switch--sm"><input type="checkbox" name="roleChange" <%= settings.logs.events.roleChange ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          <label class="toggle-row"><span class="toggle-label">الطرد/الحظر</span><span class="switch switch--sm"><input type="checkbox" name="banKick" <%= settings.logs.events.banKick ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+        </div>
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== الفلترة ===== -->
+    <div class="card card--moderation">
+      <div class="card-head">
+        <div class="card-icon">🛡️</div>
+        <div>
+          <h2>الفلترة (ألفاظ وروابط)</h2>
+          <div class="card-sub">حماية القناة من المحتوى غير المرغوب</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/moderation">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل فلتر الألفاظ</span>
+          <span class="switch">
+            <input type="checkbox" name="badWordsEnabled" <%= settings.moderation.badWordsEnabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+        <label>الكلمات الممنوعة (افصل بفاصلة ,)</label>
+        <input type="text" name="badWords" value="<%= settings.moderation.badWords.join(', ') %>">
+
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل فلتر الروابط</span>
+          <span class="switch">
+            <input type="checkbox" name="linkFilterEnabled" <%= settings.moderation.linkFilterEnabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+        <label>الدومينات المسموحة رغم الفلتر (افصل بفاصلة ,)</label>
+        <input type="text" name="allowedLinkDomains" placeholder="youtube.com, tenor.com" value="<%= settings.moderation.allowedLinkDomains.join(', ') %>">
+
+        <label>عدد الإنذارات قبل الإجراء</label>
+        <input type="number" name="warnLimit" value="<%= settings.moderation.warnLimit %>" min="1">
+
+        <label>الإجراء عند الوصول للحد</label>
+        <select name="warnAction">
+          <option value="none" <%= settings.moderation.warnAction === 'none' ? 'selected' : '' %>>بدون إجراء</option>
+          <option value="mute" <%= settings.moderation.warnAction === 'mute' ? 'selected' : '' %>>كتم مؤقت (10 دقائق)</option>
+          <option value="kick" <%= settings.moderation.warnAction === 'kick' ? 'selected' : '' %>>طرد</option>
+          <option value="ban" <%= settings.moderation.warnAction === 'ban' ? 'selected' : '' %>>حظر</option>
+        </select>
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== الاقتراحات ===== -->
+    <div class="card card--suggestions">
+      <div class="card-head">
+        <div class="card-icon">💡</div>
+        <div>
+          <h2>الاقتراحات</h2>
+          <div class="card-sub">تصويت الأعضاء على أفكار جديدة</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/suggestions">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل نظام الاقتراحات</span>
+          <span class="switch">
+            <input type="checkbox" name="enabled" <%= settings.suggestions.enabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label>قناة الاقتراحات</label>
+        <select name="channelId">
+          <option value="">-- اختر قناة --</option>
+          <% channels.forEach(c => { %>
+            <option value="<%= c.id %>" <%= settings.suggestions.channelId === c.id ? 'selected' : '' %>># <%= c.name %></option>
+          <% }) %>
+        </select>
+
+        <label>إيموجي الموافقة</label>
+        <input type="text" name="upvoteEmoji" value="<%= settings.suggestions.upvoteEmoji %>" style="width:80px">
+
+        <label>إيموجي الرفض</label>
+        <input type="text" name="downvoteEmoji" value="<%= settings.suggestions.downvoteEmoji %>" style="width:80px">
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== المستويات ===== -->
+    <div class="card card--leveling">
+      <div class="card-head">
+        <div class="card-icon">⭐</div>
+        <div>
+          <h2>نظام المستويات</h2>
+          <div class="card-sub">XP يزيد مع النشاط، والرتب تُمنح تلقائياً</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/leveling">
+        <label class="toggle-row">
+          <span class="toggle-label">تفعيل نظام المستويات</span>
+          <span class="switch">
+            <input type="checkbox" name="enabled" <%= settings.leveling.enabled ? 'checked' : '' %>>
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </span>
+        </label>
+
+        <label>XP لكل رسالة</label>
+        <input type="number" name="xpPerMessage" value="<%= settings.leveling.xpPerMessage %>">
+
+        <label>مدة الانتظار بين كل XP (بالثواني)</label>
+        <input type="number" name="cooldownSeconds" value="<%= settings.leveling.cooldownSeconds %>">
+
+        <label>قناة إعلان صعود المستوى (اختياري)</label>
+        <select name="levelUpChannelId">
+          <option value="">-- نفس قناة الرسالة --</option>
+          <% channels.forEach(c => { %>
+            <option value="<%= c.id %>" <%= settings.leveling.levelUpChannelId === c.id ? 'selected' : '' %>># <%= c.name %></option>
+          <% }) %>
+        </select>
+
+        <hr>
+        <p style="font-size:14px;color:var(--text-muted);"><b style="color:var(--text-primary)">🎁 ربط الرتب الجاهزة بمستويات معينة</b><br>لما العضو يوصل هذا المستوى، تنعطى له هذي الرتبة تلقائياً</p>
+        <div id="rewards-list">
+          <% settings.leveling.roleRewards.forEach(r => { %>
+            <div class="reward-row">
+              <input type="number" name="rewardLevels" placeholder="المستوى" value="<%= r.level %>">
+              <select name="rewardRoles">
+                <% roles.forEach(role => { %>
+                  <option value="<%= role.id %>" <%= r.roleId === role.id ? 'selected' : '' %>><%= role.name %></option>
+                <% }) %>
+              </select>
+            </div>
+          <% }) %>
+          <div class="reward-row">
+            <input type="number" name="rewardLevels" placeholder="المستوى">
+            <select name="rewardRoles">
+              <option value="">-- اختر رول --</option>
+              <% roles.forEach(role => { %>
+                <option value="<%= role.id %>"><%= role.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+    <!-- ===== الردود التلقائية ===== -->
+    <div class="card card--responses">
+      <div class="card-head">
+        <div class="card-icon">💬</div>
+        <div>
+          <h2>الردود التلقائية</h2>
+          <div class="card-sub">رد فوري عند ذكر كلمة معينة</div>
+        </div>
+      </div>
+      <form method="POST" action="/api/<%= guild.id %>/autoresponses">
+        <div id="responses-list">
+          <% settings.autoResponses.forEach((a, i) => { %>
+            <div class="response-row">
+              <input type="text" name="triggers" placeholder="الكلمة المحفزة" value="<%= a.trigger %>">
+              <input type="text" name="responses" placeholder="الرد" value="<%= a.response %>">
+              <label class="toggle-row"><span class="toggle-label">تطابق تام</span><span class="switch switch--sm"><input type="checkbox" name="exactMatches" value="<%= i %>" <%= a.exactMatch ? 'checked' : '' %>><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+            </div>
+          <% }) %>
+          <div class="response-row">
+            <input type="text" name="triggers" placeholder="الكلمة المحفزة">
+            <input type="text" name="responses" placeholder="الرد">
+            <label class="toggle-row"><span class="toggle-label">تطابق تام</span><span class="switch switch--sm"><input type="checkbox" name="exactMatches" value="<%= settings.autoResponses.length %>"><span class="switch-track"><span class="switch-thumb"></span></span></span></label>
+          </div>
+        </div>
+        <p class="hint">💡 ملاحظة: عند الحفظ يتم استبدال كل القائمة، فتأكد إنك ما تحذف صفوف موجودة قبل لا تحفظ.</p>
+        <button type="submit">💾 حفظ</button>
+      </form>
+    </div>
+
+  </div>
+  <script src="/toast.js"></script>
+</body>
+</html>

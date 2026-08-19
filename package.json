@@ -1,0 +1,27 @@
+{
+  "name": "community-discord-bot",
+  "version": "1.0.0",
+  "description": "بوت وموقع إدارة سيرفر ديسكورد - خدمة واحدة",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "pg": "^8.11.5",
+    "dotenv": "^16.4.5",
+    "@napi-rs/canvas": "^0.1.44",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "connect-pg-simple": "^9.0.1",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "ejs": "^3.1.9",
+    "@discordjs/voice": "^0.17.0",
+    "libsodium-wrappers": "^0.7.15",
+    "gifenc": "^1.0.3"
+  }
+}
