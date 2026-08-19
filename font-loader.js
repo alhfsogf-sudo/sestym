@@ -57,3 +57,4 @@ async function loadArabicFont() {
 }
 
 module.exports = { loadArabicFont };
+ 
