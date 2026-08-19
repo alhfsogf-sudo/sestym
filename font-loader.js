@@ -1,23 +1,22 @@
 const { GlobalFonts } = require('@napi-rs/canvas');
 
-// خط Cairo - النسخة الثابتة (static) وليس Variable Font
-// السبب: @napi-rs/canvas ما يرسم خطوط الـ Variable Fonts (woff2-variations) بشكل صحيح
-// فكانت النصوص تطلع مربعات فاضية حتى بعد تسجيل الملف بنجاح.
-// نستخدم بدالها ملفات وزن ثابت (400 عادي / 700 عريض) لكل من العربي واللاتيني
-const FONT_TAG = 'CAIRO-STATIC-V3'; // علامة تأكيد بالـ log إننا على النسخة الصح
-const FONT_VERSION = '5.3.0';
+// خط Cairo - نستخدم الملفات الأصلية (غير مقسومة حسب اللغة) من مستودع الخط نفسه
+// السبب الحقيقي للمربعات: خطوط Fontsource مقسومة لملفين منفصلين (عربي / لاتيني)،
+// وأي سطر نص يخلط عربي + أرقام إنجليزية (زي "المستوى 5") يُرسم بملف واحد بس،
+// فإذا انتخب المحرك ملف العربي، ما يلقى شكل الأرقام الإنجليزية ويطلعها مربعات فاضية.
+// الحل: ملف واحد فيه العربي والإنجليزي والأرقام مع بعض لكل وزن (Regular / Bold).
+const FONT_TAG = 'CAIRO-UNIFIED-V4';
+const COMMIT = '7030db78cca3a7a7d94f9071b3f35dad7447ae71';
 const FILES = [
-  'arabic-400-normal',
-  'arabic-700-normal',
-  'latin-400-normal',
-  'latin-700-normal',
-].map(name => `https://cdn.jsdelivr.net/fontsource/fonts/cairo@${FONT_VERSION}/${name}.woff2`);
+  `https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@${COMMIT}/fonts/ttf/Cairo-Regular.ttf`,
+  `https://cdn.jsdelivr.net/gh/Gue3bara/Cairo@${COMMIT}/fonts/ttf/Cairo-Bold.ttf`,
+];
 
 const fontBuffers = [];
 let loaded = false;
 
 async function loadArabicFont() {
-  console.log(`ℹ️ [${FONT_TAG}] بدء تحميل خط Cairo (ثابت، غير Variable)...`);
+  console.log(`ℹ️ [${FONT_TAG}] بدء تحميل خط Cairo الموحّد (عربي+إنجليزي بملف واحد)...`);
 
   if (loaded) return true;
 
@@ -39,16 +38,16 @@ async function loadArabicFont() {
         allOk = false;
         console.error(`   ❌ فشل تسجيل ${url}`);
       } else {
-        console.log(`   ✅ تسجّل: ${url}`);
+        console.log(`   ✅ تسجّل: ${url} (${buffer.length} بايت)`);
       }
     }
 
     loaded = allOk;
 
     if (loaded) {
-      console.log(`✅ [${FONT_TAG}] تم تحميل خط Cairo (عربي + لاتيني، عادي + عريض) بنجاح - النصوص بالصور راح تشتغل صح`);
+      console.log(`✅ [${FONT_TAG}] تم تحميل خط Cairo بنجاح - النصوص المختلطة (عربي + أرقام) راح تشتغل صح`);
     } else {
-      console.error(`❌ [${FONT_TAG}] صار خلل بتحميل/تسجيل بعض ملفات خط Cairo (شوف التفاصيل فوق)`);
+      console.error(`❌ [${FONT_TAG}] صار خلل بتحميل/تسجيل خط Cairo (شوف التفاصيل فوق)`);
     }
     return loaded;
   } catch (err) {
@@ -59,3 +58,4 @@ async function loadArabicFont() {
 }
 
 module.exports = { loadArabicFont };
+ 
