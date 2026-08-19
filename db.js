@@ -24,7 +24,9 @@ const DEFAULT_SETTINGS = {
   adminRoleIds: []
 };
 
-const DEFAULT_MEMBER = { xp: 0, level: 0, messageCount: 0, lastXpTimestamp: null, warnings: [], joinedAt: new Date().toISOString() };
+function makeDefaultMember() {
+  return { xp: 0, level: 0, messageCount: 0, lastXpTimestamp: null, warnings: [], joinedAt: new Date().toISOString() };
+}
 
 // ---------- إنشاء الجداول أول مرة ----------
 async function initTables() {
@@ -92,11 +94,11 @@ async function updateSettings(guildId, partialSection) {
 async function getMember(guildId, userId) {
   const res = await pool.query('SELECT data FROM members WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
   if (res.rows.length === 0) {
-    const fresh = { ...DEFAULT_MEMBER };
+    const fresh = makeDefaultMember();
     await pool.query('INSERT INTO members (guild_id, user_id, data) VALUES ($1, $2, $3)', [guildId, userId, fresh]);
     return fresh;
   }
-  return { ...DEFAULT_MEMBER, ...res.rows[0].data };
+  return { ...makeDefaultMember(), ...res.rows[0].data };
 }
 
 async function saveMember(guildId, userId, data) {
@@ -277,3 +279,4 @@ module.exports = {
   incrementDailyMessage, incrementDailyNewMember, getDailyActivity,
   resetMemberLeveling, resetAllLeveling
 };
+ 
