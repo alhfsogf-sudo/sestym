@@ -102,9 +102,21 @@ async function createComparisonCard({ memberA, memberB, docA, docB }) {
 
   // ------- المقارنة حسب الفئات -------
   const categories = [
-    { label: '⭐ المستوى', valA: docA.level, valB: docB.level },
-    { label: '💬 الرسائل', valA: docA.messageCount, valB: docB.messageCount },
-    { label: '📅 الأقدمية', valA: -new Date(docA.joinedAt).getTime(), valB: -new Date(docB.joinedAt).getTime(), display: true }
+    {
+      label: 'المستوى',
+      valA: docA.level, valB: docB.level,
+      dispA: docA.level.toLocaleString('en-US'), dispB: docB.level.toLocaleString('en-US')
+    },
+    {
+      label: 'الرسائل',
+      valA: docA.messageCount, valB: docB.messageCount,
+      dispA: docA.messageCount.toLocaleString('en-US'), dispB: docB.messageCount.toLocaleString('en-US')
+    },
+    {
+      label: 'الأقدمية',
+      valA: -new Date(docA.joinedAt).getTime(), valB: -new Date(docB.joinedAt).getTime(),
+      dispA: new Date(docA.joinedAt).toLocaleDateString('ar-EG'), dispB: new Date(docB.joinedAt).toLocaleDateString('ar-EG')
+    }
   ];
 
   let winsA = 0, winsB = 0;
@@ -115,21 +127,24 @@ async function createComparisonCard({ memberA, memberB, docA, docB }) {
     return { ...cat, winner };
   });
 
-  ctx.textAlign = 'center';
-  ctx.font = '18px Cairo';
   let y = 320;
   for (const row of rows) {
-    ctx.fillStyle = row.winner === 'A' ? colorA : '#b9bbbe';
-    ctx.textAlign = 'right';
-    ctx.fillText(row.winner === 'A' ? '👑' : '', W * 0.25 + 90, y + 6);
-
-    ctx.fillStyle = '#e0e0e0';
+    // القيمة يمين ويسار + علامة صح ✓ مرسومة يدويًا بجنب الطرف الفايز بهالفئة
     ctx.textAlign = 'center';
-    ctx.fillText(row.label, W / 2, y);
+    ctx.font = 'bold 17px Cairo';
+
+    ctx.fillStyle = row.winner === 'A' ? colorA : '#b9bbbe';
+    ctx.fillText(row.dispA, W * 0.25, y);
+    if (row.winner === 'A') drawCheckmark(ctx, W * 0.25 + 55, y - 6, 10, colorA);
 
     ctx.fillStyle = row.winner === 'B' ? colorB : '#b9bbbe';
-    ctx.textAlign = 'left';
-    ctx.fillText(row.winner === 'B' ? '👑' : '', W * 0.75 - 90, y + 6);
+    ctx.fillText(row.dispB, W * 0.75, y);
+    if (row.winner === 'B') drawCheckmark(ctx, W * 0.75 - 55, y - 6, 10, colorB);
+
+    // التسمية بالنص: "القيمة : اسم الفئة : القيمة"
+    ctx.fillStyle = '#e0e0e0';
+    ctx.font = '18px Cairo';
+    ctx.fillText(`: ${row.label} :`, W / 2, y);
 
     y += 32;
   }
@@ -141,10 +156,10 @@ async function createComparisonCard({ memberA, memberB, docA, docB }) {
     const winnerName = winsA > winsB ? memberA.user.username : memberB.user.username;
     const winnerColor = winsA > winsB ? colorA : colorB;
     ctx.fillStyle = winnerColor;
-    ctx.fillText(`🏆 ${winnerName} يتصدر بـ ${Math.max(winsA, winsB)} من ${rows.length} فئات`, W / 2, y + 20);
+    ctx.fillText(`${winnerName} يتصدر بـ ${Math.max(winsA, winsB)} من ${rows.length} فئات`, W / 2, y + 20);
   } else {
     ctx.fillStyle = '#ffb020';
-    ctx.fillText('🤝 تعادل تام بين الطرفين!', W / 2, y + 20);
+    ctx.fillText('تعادل تام بين الطرفين!', W / 2, y + 20);
   }
 
   return canvas.toBuffer('image/png');
@@ -180,6 +195,26 @@ async function drawAvatar(ctx, url, x, y, size, borderColor) {
   ctx.stroke();
 }
 
+// علامة صح ✓ مرسومة يدويًا (بدل إيموجي 👑) تُستخدم كعلامة تفوّق بجدول المقارنة
+function drawCheckmark(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, size, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(cx - size * 0.5, cy);
+  ctx.lineTo(cx - size * 0.12, cy + size * 0.4);
+  ctx.lineTo(cx + size * 0.5, cy - size * 0.35);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+  ctx.restore();
+}
+
 function roundRect(ctx, x, y, width, height, radius) {
   width = Math.max(width, 0);
   ctx.beginPath();
@@ -203,3 +238,4 @@ function truncate(str, max) {
 }
 
 module.exports = { createComparisonCard };
+ 
