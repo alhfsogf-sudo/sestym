@@ -14,6 +14,7 @@ const textMyStats = require('./text-mystats');
 const textCompare = require('./text-compare');
 const textGuildInfo = require('./text-guildinfo');
 const textLevelReset = require('./text-levelreset');
+const textEditMember = require('./text-editmember');
 
 module.exports = {
   ...textVoice,
@@ -31,5 +32,6 @@ module.exports = {
   ...textMyStats,
   ...textCompare,
   ...textGuildInfo,
-  ...textLevelReset
+  ...textLevelReset,
+  ...textEditMember
 };
