@@ -38,7 +38,7 @@ module.exports = {
         }
       } catch (err) {
         console.error(`❌ خطأ بتنفيذ أمر "${firstWord}":`, err);
-        await message.reply({ embeds: [errorEmbed('صار خطأ', 'تأكد إن البوت عنده الصلاحيات الكافية ورتبته أعلى من رتبة الهدف.')] });
+        await message.reply({ embeds: [errorEmbed('صار خطأ غير متوقع', `تعذر تنفيذ أمر \`${firstWord}\`. جرب مرة ثانية، ولو استمرت المشكلة بلغ الإدارة.`)] });
       }
       return;
     }
@@ -138,7 +138,9 @@ async function handleXP(message, settings) {
   }
 
   const oldLevel = memberDoc.level;
-  memberDoc.xp += settings.leveling.xpPerMessage;
+  // سقف أقصى دفاعي: حتى لو صار خلل بمصدر الإعدادات، لا يُعطى أكثر من 1000 XP بالرسالة الوحدة
+  const safeXpGain = Math.min(Math.max(settings.leveling.xpPerMessage, 0), 1000);
+  memberDoc.xp += safeXpGain;
   memberDoc.level = calculateLevel(memberDoc.xp);
   memberDoc.lastXpTimestamp = now.toISOString();
   await db.saveMember(message.guild.id, message.author.id, memberDoc);
