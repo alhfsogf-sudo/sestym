@@ -73,17 +73,25 @@ router.post(`${base}/leveling`, ensureAuthenticated, ensureGuildAdmin, async (re
   const roles = Array.isArray(rewardRoles) ? rewardRoles : [rewardRoles].filter(Boolean);
   const roleRewards = levels.map((lvl, i) => ({ level: parseInt(lvl), roleId: roles[i] })).filter(r => r.level && r.roleId);
 
+  // حماية من أرقام خاطئة (زي لصق معرف ديسكورد بالغلط) تفسد نظام الـ XP بالكامل
+  const safeXpPerMessage = clamp(parseInt(xpPerMessage) || 15, 1, 1000);
+  const safeCooldown = clamp(parseInt(cooldownSeconds) || 60, 0, 86400);
+
   await db.updateSettings(req.params.guildId, {
     leveling: {
       enabled: enabled === 'on',
-      xpPerMessage: parseInt(xpPerMessage) || 15,
-      cooldownSeconds: parseInt(cooldownSeconds) || 60,
+      xpPerMessage: safeXpPerMessage,
+      cooldownSeconds: safeCooldown,
       levelUpChannelId: levelUpChannelId || null,
       roleRewards
     }
   });
   res.redirect(`/dashboard/${req.params.guildId}?saved=leveling`);
 });
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
 router.post(`${base}/autoresponses`, ensureAuthenticated, ensureGuildAdmin, async (req, res) => {
   const { triggers, responses, exactMatches } = req.body;
