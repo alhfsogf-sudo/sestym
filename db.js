@@ -24,9 +24,7 @@ const DEFAULT_SETTINGS = {
   adminRoleIds: []
 };
 
-function makeDefaultMember() {
-  return { xp: 0, level: 0, messageCount: 0, lastXpTimestamp: null, warnings: [], joinedAt: new Date().toISOString() };
-}
+const DEFAULT_MEMBER = { xp: 0, level: 0, messageCount: 0, lastXpTimestamp: null, warnings: [], joinedAt: new Date().toISOString() };
 
 // ---------- إنشاء الجداول أول مرة ----------
 async function initTables() {
@@ -94,11 +92,11 @@ async function updateSettings(guildId, partialSection) {
 async function getMember(guildId, userId) {
   const res = await pool.query('SELECT data FROM members WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
   if (res.rows.length === 0) {
-    const fresh = makeDefaultMember();
+    const fresh = { ...DEFAULT_MEMBER };
     await pool.query('INSERT INTO members (guild_id, user_id, data) VALUES ($1, $2, $3)', [guildId, userId, fresh]);
     return fresh;
   }
-  return { ...makeDefaultMember(), ...res.rows[0].data };
+  return { ...DEFAULT_MEMBER, ...res.rows[0].data };
 }
 
 async function saveMember(guildId, userId, data) {
@@ -111,7 +109,7 @@ async function saveMember(guildId, userId, data) {
 
 async function getAllMembersSorted(guildId, limit = 10) {
   const res = await pool.query(
-    `SELECT user_id, data FROM members WHERE guild_id = $1 ORDER BY (data->>'xp')::int DESC LIMIT $2`,
+    `SELECT user_id, data FROM members WHERE guild_id = $1 ORDER BY (data->>'xp')::bigint DESC LIMIT $2`,
     [guildId, limit]
   );
   return res.rows.map(r => ({ userId: r.user_id, ...r.data }));
@@ -119,7 +117,7 @@ async function getAllMembersSorted(guildId, limit = 10) {
 
 async function countMembersAbove(guildId, xp) {
   const res = await pool.query(
-    `SELECT COUNT(*) FROM members WHERE guild_id = $1 AND (data->>'xp')::int > $2`,
+    `SELECT COUNT(*) FROM members WHERE guild_id = $1 AND (data->>'xp')::bigint > $2`,
     [guildId, xp]
   );
   return parseInt(res.rows[0].count);
@@ -181,9 +179,9 @@ async function getLatestBackup(guildId) {
 async function getGuildAggregateStats(guildId) {
   const res = await pool.query(
     `SELECT COUNT(*)::int AS tracked_members,
-            COALESCE(SUM((data->>'messageCount')::int), 0)::int AS total_messages,
+            COALESCE(SUM((data->>'messageCount')::bigint), 0)::bigint AS total_messages,
             COALESCE(SUM(jsonb_array_length(data->'warnings')), 0)::int AS total_warnings,
-            COALESCE(MAX((data->>'level')::int), 0)::int AS top_level
+            COALESCE(MAX((data->>'level')::bigint), 0)::bigint AS top_level
      FROM members WHERE guild_id = $1`,
     [guildId]
   );
@@ -279,4 +277,3 @@ module.exports = {
   incrementDailyMessage, incrementDailyNewMember, getDailyActivity,
   resetMemberLeveling, resetAllLeveling
 };
- 
